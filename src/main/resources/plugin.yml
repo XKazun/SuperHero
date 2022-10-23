@@ -1,0 +1,9 @@
+name: SuperHero
+version: '${project.version}'
+main: kazun.superhero.Main.SuperHero
+api-version: 1.19
+authors: [ Kazun ]
+description: Plugin o super bohaterem
+commands:
+  hero:
+    description: Komendy hero

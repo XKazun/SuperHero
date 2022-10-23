@@ -1,0 +1,24 @@
+Quests: Brak
+
+Shops:
+  ShopStartAmount: 1
+  #Dostêpne wielkoœci 9, 18, 27, 36, 45, 54
+  ShopStartSize: 9
+  BuyNewShopCost: 10000
+  BuyMoreStorageContentsCost: 10000
+PvP: false
+Enchanter:
+  Tiier:
+    One: true
+    Two: false
+    Three: false
+Blacksmith:
+  Tiier:
+    One: true
+    Two: false
+    Three: false
+Witch:
+  Tiier:
+    One: true
+    Two: false
+    Three: false
