@@ -16,6 +16,11 @@ public class Blue implements Listener {
     }
 
     public static HashMap<Player,Integer> negativeCooldown = new HashMap<>();
+    public static HashMap<Player,Integer> invisibleCooldown = new HashMap<>();
+    public static HashMap<Player,Integer> invisibleActiveTimePlayer = new HashMap<>();
     public static String negativeComboCombination = "P P L ";
+    public static String invisibleComboCombination = "L L P ";
     public static int negativeCooldownTime = 30;
+    public static int invisibleCooldownTime = 30;
+    public static int invisibleActiveTime = 5;
 }

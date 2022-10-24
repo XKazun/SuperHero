@@ -24,5 +24,5 @@ public class Purple implements Listener {
     public static HashMap<Player,Integer> teleportCooldown = new HashMap<>();
     public static String teleportComboCombination = "P P L ";
     public static String dodgeComboCombination = "P L P ";
-    public static int teleportCooldownTime = 30;
+    public static int teleportCooldownTime = 15;
 }

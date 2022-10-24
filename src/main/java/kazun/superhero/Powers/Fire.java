@@ -13,6 +13,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerToggleFlightEvent;
 import org.bukkit.inventory.EquipmentSlot;
@@ -21,6 +22,7 @@ import org.bukkit.plugin.Plugin;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Objects;
 
 public class Fire implements Listener {
     public static Plugin plugin = SuperHero.getPlugin(SuperHero.class);
@@ -28,7 +30,6 @@ public class Fire implements Listener {
     public Fire(SuperHero plugin) {
         Bukkit.getPluginManager().registerEvents(this, plugin);
     }
-    public static HashMap<Player,Boolean> activateJump = new HashMap<>();
     public static HashMap<Player,Integer> FireJumpActiveTime = new HashMap<>();
     public static HashMap<Player,Integer> FireJumpCooldown = new HashMap<>();
     public static int activeTime = 30;
@@ -45,36 +46,51 @@ public class Fire implements Listener {
     public static int lavaWalkActiveTime = 20;
 
     @EventHandler
+    public void onPlayerJoin(PlayerJoinEvent e) {
+        Player p = e.getPlayer();
+        if(!e.getPlayer().hasPlayedBefore()){
+            plugin.getConfig().set("Players."+ e.getPlayer().getName() +".Power", "Brak");
+            plugin.saveConfig();
+        }else{
+            ArrayList<String> configPlayers = new ArrayList<>(Objects.requireNonNull(plugin.getConfig().getConfigurationSection("Players.")).getKeys(false));
+            if(!configPlayers.contains(p.getName())) {
+                plugin.getConfig().set("Players."+ e.getPlayer().getName() +".Power", "Brak");
+                plugin.saveConfig();
+            }
+        }
+    }
+    @EventHandler
     public void onPlayerUseBurn(PlayerInteractEvent e) {
         Player p = e.getPlayer();
         if (e.getHand() != EquipmentSlot.HAND) return;
-        if(e.getItem()!= null){
-            if(e.getAction().equals(Action.RIGHT_CLICK_BLOCK) || e.getAction().equals(Action.RIGHT_CLICK_AIR)){
-                if(!ActualComboCombination.isEmpty()) {
-                    if (ActualComboCombination.containsKey(p)) {
-                        ActualComboCombination.put(p, ActualComboCombination.get(p) + "P ");
+        if(e.getItem()!= null) {
+            if (e.getItem().isSimilar(new ItemStack(Material.LEATHER_HORSE_ARMOR))) {
+                if (e.getAction().equals(Action.RIGHT_CLICK_BLOCK) || e.getAction().equals(Action.RIGHT_CLICK_AIR)) {
+                    if (!ActualComboCombination.isEmpty()) {
+                        if (ActualComboCombination.containsKey(p)) {
+                            ActualComboCombination.put(p, ActualComboCombination.get(p) + "P ");
+                        } else {
+                            ActualComboCombination.put(p, "P ");
+                        }
                     } else {
                         ActualComboCombination.put(p, "P ");
                     }
-                }else{
-                    ActualComboCombination.put(p,"P ");
                 }
-            }
-            if(e.getAction().equals(Action.LEFT_CLICK_BLOCK) || e.getAction().equals(Action.LEFT_CLICK_AIR)){
-                if(!ActualComboCombination.isEmpty()) {
-                    if (ActualComboCombination.containsKey(p)) {
-                        ActualComboCombination.put(p, ActualComboCombination.get(p) + "L ");
+                if (e.getAction().equals(Action.LEFT_CLICK_BLOCK) || e.getAction().equals(Action.LEFT_CLICK_AIR)) {
+                    if (!ActualComboCombination.isEmpty()) {
+                        if (ActualComboCombination.containsKey(p)) {
+                            ActualComboCombination.put(p, ActualComboCombination.get(p) + "L ");
+                        } else {
+                            ActualComboCombination.put(p, "L ");
+                        }
                     } else {
                         ActualComboCombination.put(p, "L ");
                     }
-                }else{
-                    ActualComboCombination.put(p,"L ");
                 }
+                Utils.actionBar(p, "&aCombo: &6" + ActualComboCombination.get(p));
+                ActualComboTime.put(p, millisecondsToMakeCombination);
             }
-            Utils.actionBar(p,"&aCombo: &6"+ActualComboCombination.get(p));
-            ActualComboTime.put(p,millisecondsToMakeCombination);
         }
-
     }
     @Deprecated
     @EventHandler
@@ -83,7 +99,6 @@ public class Fire implements Listener {
         if(p.isOnGround()){
             if (e.getPlayer ().getGameMode () == GameMode.CREATIVE || e.getPlayer ().getGameMode () == GameMode.SPECTATOR) return;
             if (plugin.getConfig().getString("Players." + p.getName() + ".Power").equalsIgnoreCase("Fire")) {
-                activateJump.put(p,false);
                 if(p.getInventory().getChestplate()!=null) {
                     if (p.getInventory().getChestplate().getType().equals(Material.ELYTRA)) {
                         p.getInventory().setChestplate(null);
@@ -94,10 +109,9 @@ public class Fire implements Listener {
         if(p.isInWater()){
             if (e.getPlayer ().getGameMode () == GameMode.CREATIVE || e.getPlayer ().getGameMode () == GameMode.SPECTATOR) return;
             if (plugin.getConfig().getString("Players." + p.getName() + ".Power").equalsIgnoreCase("Fire")) {
-                if (!activateJump.isEmpty()) {
-                    if (activateJump.containsKey(p)) {
+                if (!FireJumpActiveTime.isEmpty()) {
+                    if (FireJumpActiveTime.containsKey(p)) {
                         if (p.getInventory().getChestplate() != null) {
-                            activateJump.remove(p);
                             FireJumpActiveTime.remove(p);
                             e.getPlayer().playSound(e.getPlayer().getLocation(), Sound.BLOCK_LAVA_EXTINGUISH, 1, 0);
                             if (p.getInventory().getChestplate().getType().equals(Material.ELYTRA)) {
@@ -111,16 +125,12 @@ public class Fire implements Listener {
         if(p.isGliding()){
             if (p.isSneaking()) {
                 if (!p.getAllowFlight()) {
-                    if (!activateJump.isEmpty()) {
-                        if (activateJump.containsKey(p)) {
-                            if (FireJumpActiveTime.containsKey(e.getPlayer())) {
-                                if (e.getPlayer().getGameMode() == GameMode.CREATIVE || e.getPlayer().getGameMode() == GameMode.SPECTATOR)
-                                    return;
-                                if (plugin.getConfig().getString("Players." + p.getName() + ".Power").equalsIgnoreCase("Fire")) {
-                                    if (p.getVelocity().length() < p.getLocation().getDirection().multiply(1.5).length()) {
-                                        p.setVelocity(p.getLocation().getDirection().multiply(1.5));
-                                        p.getLocation().getWorld().spawnParticle(Particle.REDSTONE, p.getLocation(), 20, 0.7, 0.2, 0.7, new Particle.DustOptions(Color.RED, 1));
-                                    }
+                    if (!FireJumpActiveTime.isEmpty()) {
+                        if (FireJumpActiveTime.containsKey(e.getPlayer())) {
+                            if (plugin.getConfig().getString("Players." + p.getName() + ".Power").equalsIgnoreCase("Fire")) {
+                                if (p.getVelocity().length() < p.getLocation().getDirection().multiply(1.5).length()) {
+                                    p.setVelocity(p.getLocation().getDirection().multiply(1.5));
+                                    p.getLocation().getWorld().spawnParticle(Particle.REDSTONE, p.getLocation(), 20, 0.7, 0.2, 0.7, new Particle.DustOptions(Color.RED, 1));
                                 }
                             }
                         }
@@ -137,47 +147,48 @@ public class Fire implements Listener {
                     if (block.getType().isSolid()){
                         p.setAllowFlight(true);
                     }
-
                 }
             }
         }
-        if (!activateJump.isEmpty() && activateJump.containsKey(e.getPlayer ())) {
-            if(plugin.getConfig().getString("Players."+p.getName()+".Power").equalsIgnoreCase("Fire")) {
-                p.spawnParticle(Particle.FLAME, p.getLocation().add(0,-0.3,0), 25,0.2,0.2,0.2,0);
+        if (!FireJumpActiveTime.isEmpty()) {
+            if(FireJumpActiveTime.containsKey(p)) {
+                if (plugin.getConfig().getString("Players." + p.getName() + ".Power").equalsIgnoreCase("Fire")) {
+                    p.spawnParticle(Particle.FLAME, p.getLocation().add(0, -0.3, 0), 25, 0.2, 0.2, 0.2, 0);
+                }
             }
         }
     }
     @EventHandler (priority = EventPriority.HIGH)
     public void onPlayerToggleFlight(PlayerToggleFlightEvent e) {
-        if (e.getPlayer ().getGameMode () == GameMode.CREATIVE || e.getPlayer ().getGameMode () == GameMode.SPECTATOR) return;
+        if (e.getPlayer().getGameMode() == GameMode.CREATIVE || e.getPlayer().getGameMode() == GameMode.SPECTATOR)
+            return;
         if (plugin.getConfig().getString("Players." + e.getPlayer().getName() + ".Power").equalsIgnoreCase("Fire")) {
-                if (activateJump.isEmpty() || !activateJump.containsKey(e.getPlayer ())) {
-                    if (!FireJumpActiveTime.containsKey(e.getPlayer())) {
-                        FireJumpActiveTime.put(e.getPlayer(), activeTime);
-                    }
-                }
-            if (!FireJumpCooldown.isEmpty()) {
-                if (FireJumpCooldown.containsKey(e.getPlayer())) {
-                    Utils.actionBar(e.getPlayer(), "&cUmiejętność jeszcze nie gotowa, poczekaj &6" + FireJumpCooldown.get(e.getPlayer()) + " sekund");
-                    return;
-                }
+            if (FireJumpActiveTime.isEmpty()) {
+                FireJumpActiveTime.put(e.getPlayer(), activeTime);
+            } else if (!FireJumpActiveTime.containsKey(e.getPlayer())) {
+                FireJumpActiveTime.put(e.getPlayer(), activeTime);
             }
-            activateJump.put(e.getPlayer(),true);
-            if (e.getPlayer().getGameMode() == GameMode.CREATIVE || e.getPlayer().getGameMode() == GameMode.SPECTATOR)
+        }
+        if (!FireJumpCooldown.isEmpty()) {
+            if (FireJumpCooldown.containsKey(e.getPlayer())) {
+                Utils.actionBar(e.getPlayer(), "&cUmiejętność jeszcze nie gotowa, poczekaj &6" + FireJumpCooldown.get(e.getPlayer()) + " sekund");
                 return;
-            e.setCancelled(true);
-            Player p = e.getPlayer();
-            e.getPlayer().playSound(e.getPlayer().getLocation(), Sound.ENTITY_BAT_TAKEOFF, 1, 1);
-            e.setCancelled(true);
-            e.getPlayer().setAllowFlight(false);
-            p.setVelocity(p.getLocation().getDirection().multiply(0.6d).setY(2.0d));
-            p.getInventory().setChestplate(new ItemStack(Material.ELYTRA));
-            for (int i = 0; i <= 3; i += 1) {
-                for (int d = 0; d <= 90; d += 1) {
-                    Location particleLoc = new Location(p.getLocation().getWorld(), p.getLocation().getX(), p.getLocation().getY(), p.getLocation().getZ());
-                    particleLoc.setX(p.getLocation().getX() + Math.cos(d) * i);
-                    p.getLocation().getWorld().spawnParticle(Particle.REDSTONE, particleLoc, 1, new Particle.DustOptions(Color.RED, 1));
-                }
+            }
+        }
+        if (e.getPlayer().getGameMode() == GameMode.CREATIVE || e.getPlayer().getGameMode() == GameMode.SPECTATOR)
+            return;
+        e.setCancelled(true);
+        Player p = e.getPlayer();
+        e.getPlayer().playSound(e.getPlayer().getLocation(), Sound.ENTITY_BAT_TAKEOFF, 1, 1);
+        e.setCancelled(true);
+        e.getPlayer().setAllowFlight(false);
+        p.setVelocity(p.getLocation().getDirection().multiply(0.6d).setY(2.0d));
+        p.getInventory().setChestplate(new ItemStack(Material.ELYTRA));
+        for (int i = 0; i <= 3; i += 1) {
+            for (int d = 0; d <= 90; d += 1) {
+                Location particleLoc = new Location(p.getLocation().getWorld(), p.getLocation().getX(), p.getLocation().getY(), p.getLocation().getZ());
+                particleLoc.setX(p.getLocation().getX() + Math.cos(d) * i);
+                p.getLocation().getWorld().spawnParticle(Particle.REDSTONE, particleLoc, 1, new Particle.DustOptions(Color.RED, 1));
             }
         }
     }

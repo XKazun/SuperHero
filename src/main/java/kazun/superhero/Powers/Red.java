@@ -27,7 +27,7 @@ public class Red implements Listener {
     public Red(SuperHero plugin) {
         Bukkit.getPluginManager().registerEvents(this, plugin);
     }
-    public static boolean activateSpeed = false;
+    public static HashMap<Player,Boolean> activateSpeed = new HashMap<>();
     public static HashMap<Player,Integer> speedActiveTime = new HashMap<>();
     public static HashMap<Player,Integer> speedCooldown = new HashMap<>();
     public static String speedComboCombination = "P P L ";
@@ -43,9 +43,11 @@ public class Red implements Listener {
     @EventHandler
     public void onPlayerUseSpeed(PlayerMoveEvent e) {
         Player p = e.getPlayer();
-        if(activateSpeed){
-            p.getLocation().getWorld().spawnParticle(Particle.DRIP_LAVA, p.getLocation(), 30, 0.2, 0.7, 0.2, 0.1);
-            p.getLocation().getWorld().spawnParticle(Particle.REDSTONE, p.getLocation(), 30, 0.2, 0.7, 0.2, new Particle.DustOptions(Color.RED, 1));
+        if(!activateSpeed.isEmpty()) {
+            if (activateSpeed.containsKey(p)) {
+                p.getLocation().getWorld().spawnParticle(Particle.DRIP_LAVA, p.getLocation(), 30, 0.2, 0.7, 0.2, 0.1);
+                p.getLocation().getWorld().spawnParticle(Particle.REDSTONE, p.getLocation(), 30, 0.2, 0.7, 0.2, new Particle.DustOptions(Color.RED, 1));
+            }
         }
     }
     @EventHandler
@@ -58,8 +60,10 @@ public class Red implements Listener {
             BlockData blockData = block.getBlockData();
             if(((Levelled) blockData).getLevel() ==0) {
                 if (plugin.getConfig().getString("Players." + p.getName() + ".Power").equalsIgnoreCase("Red")) {
-                    if(activateSpeed) {
-                        replaceWaterToLeaves(block, 2);
+                    if(!activateSpeed.isEmpty()) {
+                        if (activateSpeed.containsKey(p)) {
+                            replaceWaterToLeaves(block, 4);
+                        }
                     }
                 }
             }

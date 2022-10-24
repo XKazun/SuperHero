@@ -38,7 +38,7 @@ public class Green implements Listener {
     public static String SuperStrengthComboCombination = "P P L ";
     public static int SuperStrengthCooldownTime = 60;
     public static int SuperStrengthActiveTime = 30;
-    public static int SuperPunchCooldownTime = 60;
+    public static int SuperPunchCooldownTime = 2;
 
     @EventHandler
     public void onPlayerSuperStrength(EntityDamageByEntityEvent e) {
@@ -47,14 +47,6 @@ public class Green implements Listener {
                 Player p = (Player) e.getDamager();
                 if (plugin.getConfig().getString("Players." + p.getName() + ".Power").equalsIgnoreCase("Green")) {
                     if (SuperStrengthActive.containsKey(p)) {
-                        e.setDamage(e.getDamage() * 10);
-                        Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(plugin, () -> {
-                            e.getEntity().setVelocity(p.getLocation().getDirection().multiply(3d).setY(2.0d));
-                            PunchEntity.add(e.getEntity());
-                        }, 2);
-                        e.getEntity().getLocation().getWorld().spawnParticle(Particle.VILLAGER_HAPPY, e.getEntity().getLocation(), 30, 1, 1, 1, 0, null, true);
-                    }
-                    if (!SuperPunchCooldown.containsKey(p)) {
 
                         if(e.getDamage() * 40<= ((LivingEntity)e.getEntity()).getHealth()){
                             ((LivingEntity)e.getEntity()).setHealth(1);
@@ -62,11 +54,23 @@ public class Green implements Listener {
                             e.setDamage(e.getDamage() * 40);
                         }
                         Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(plugin, () -> {
-                            e.getEntity().setVelocity(p.getLocation().getDirection().multiply(1d).setY(0.3d));
+                            e.getEntity().setVelocity(p.getLocation().getDirection().multiply(1.5d).setY(0.7d));
                             PowerPunchEntity.add(e.getEntity());
                         }, 2);
-                       p.setVelocity(p.getLocation().getDirection().multiply(-0.5d).setY(0.3d));
-                       SuperPunchCooldown.put(p,SuperPunchCooldownTime);
+                        p.setVelocity(p.getLocation().getDirection().multiply(-0.5d).setY(0.3d));
+                        return;
+                       }
+
+                    if (!SuperPunchCooldown.containsKey(p)) {
+
+                        e.setDamage(e.getDamage() * 10);
+                        Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(plugin, () -> {
+                            e.getEntity().setVelocity(p.getLocation().getDirection().multiply(3d).setY(2.0d));
+                            PunchEntity.add(e.getEntity());
+                        }, 2);
+                        e.getEntity().getLocation().getWorld().spawnParticle(Particle.VILLAGER_HAPPY, e.getEntity().getLocation(), 30, 1, 1, 1, 0, null, true);
+
+                        SuperPunchCooldown.put(p,SuperPunchCooldownTime);
                     }
                 }
 
