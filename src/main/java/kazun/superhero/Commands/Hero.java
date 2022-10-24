@@ -21,7 +21,7 @@ public class Hero implements CommandExecutor {
         if (cmd.getName().equalsIgnoreCase("Hero")) {
             if(args.length==2){
                 if(args[0] != null){
-                    if(args[1].equalsIgnoreCase("Fire")){
+                    if(args[1].equalsIgnoreCase("Orange")){
                         plugin.getConfig().set("Players."+ args[0] +".Power", args[1]);
                         p.sendMessage(Utils.chat("&aUstawiono moc graczowi &6" + args[0]+" &ana &b" +args[1]));
                         plugin.saveConfig();

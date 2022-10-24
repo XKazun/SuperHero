@@ -28,7 +28,7 @@ public class Fire implements Listener {
     public Fire(SuperHero plugin) {
         Bukkit.getPluginManager().registerEvents(this, plugin);
     }
-    public boolean activateJump = false;
+    public static HashMap<Player,Boolean> activateJump = new HashMap<>();
     public static HashMap<Player,Integer> FireJumpActiveTime = new HashMap<>();
     public static HashMap<Player,Integer> FireJumpCooldown = new HashMap<>();
     public static int activeTime = 30;
@@ -83,7 +83,7 @@ public class Fire implements Listener {
         if(p.isOnGround()){
             if (e.getPlayer ().getGameMode () == GameMode.CREATIVE || e.getPlayer ().getGameMode () == GameMode.SPECTATOR) return;
             if (plugin.getConfig().getString("Players." + p.getName() + ".Power").equalsIgnoreCase("Fire")) {
-                activateJump = false;
+                activateJump.put(p,false);
                 if(p.getInventory().getChestplate()!=null) {
                     if (p.getInventory().getChestplate().getType().equals(Material.ELYTRA)) {
                         p.getInventory().setChestplate(null);
@@ -94,13 +94,15 @@ public class Fire implements Listener {
         if(p.isInWater()){
             if (e.getPlayer ().getGameMode () == GameMode.CREATIVE || e.getPlayer ().getGameMode () == GameMode.SPECTATOR) return;
             if (plugin.getConfig().getString("Players." + p.getName() + ".Power").equalsIgnoreCase("Fire")) {
-                if(activateJump) {
-                    if (p.getInventory().getChestplate() != null) {
-                        activateJump = false;
-                        FireJumpActiveTime.remove(p);
-                        e.getPlayer().playSound(e.getPlayer().getLocation(), Sound.BLOCK_LAVA_EXTINGUISH, 1, 0);
-                        if (p.getInventory().getChestplate().getType().equals(Material.ELYTRA)) {
-                            p.getInventory().setChestplate(null);
+                if (!activateJump.isEmpty()) {
+                    if (activateJump.containsKey(p)) {
+                        if (p.getInventory().getChestplate() != null) {
+                            activateJump.remove(p);
+                            FireJumpActiveTime.remove(p);
+                            e.getPlayer().playSound(e.getPlayer().getLocation(), Sound.BLOCK_LAVA_EXTINGUISH, 1, 0);
+                            if (p.getInventory().getChestplate().getType().equals(Material.ELYTRA)) {
+                                p.getInventory().setChestplate(null);
+                            }
                         }
                     }
                 }
@@ -109,13 +111,16 @@ public class Fire implements Listener {
         if(p.isGliding()){
             if (p.isSneaking()) {
                 if (!p.getAllowFlight()) {
-                    if(activateJump) {
-                        if (FireJumpActiveTime.containsKey(e.getPlayer())) {
-                            if (e.getPlayer().getGameMode() == GameMode.CREATIVE || e.getPlayer().getGameMode() == GameMode.SPECTATOR) return;
-                            if (plugin.getConfig().getString("Players." + p.getName() + ".Power").equalsIgnoreCase("Fire")) {
-                                if (p.getVelocity().length() < p.getLocation().getDirection().multiply(1.5).length()) {
-                                    p.setVelocity(p.getLocation().getDirection().multiply(1.5));
-                                    p.getLocation().getWorld().spawnParticle(Particle.REDSTONE, p.getLocation(), 20,0.7,0.2,0.7, new Particle.DustOptions(Color.RED, 1));
+                    if (!activateJump.isEmpty()) {
+                        if (activateJump.containsKey(p)) {
+                            if (FireJumpActiveTime.containsKey(e.getPlayer())) {
+                                if (e.getPlayer().getGameMode() == GameMode.CREATIVE || e.getPlayer().getGameMode() == GameMode.SPECTATOR)
+                                    return;
+                                if (plugin.getConfig().getString("Players." + p.getName() + ".Power").equalsIgnoreCase("Fire")) {
+                                    if (p.getVelocity().length() < p.getLocation().getDirection().multiply(1.5).length()) {
+                                        p.setVelocity(p.getLocation().getDirection().multiply(1.5));
+                                        p.getLocation().getWorld().spawnParticle(Particle.REDSTONE, p.getLocation(), 20, 0.7, 0.2, 0.7, new Particle.DustOptions(Color.RED, 1));
+                                    }
                                 }
                             }
                         }
@@ -136,7 +141,7 @@ public class Fire implements Listener {
                 }
             }
         }
-        if(activateJump){
+        if (!activateJump.isEmpty() && activateJump.containsKey(e.getPlayer ())) {
             if(plugin.getConfig().getString("Players."+p.getName()+".Power").equalsIgnoreCase("Fire")) {
                 p.spawnParticle(Particle.FLAME, p.getLocation().add(0,-0.3,0), 25,0.2,0.2,0.2,0);
             }
@@ -146,19 +151,18 @@ public class Fire implements Listener {
     public void onPlayerToggleFlight(PlayerToggleFlightEvent e) {
         if (e.getPlayer ().getGameMode () == GameMode.CREATIVE || e.getPlayer ().getGameMode () == GameMode.SPECTATOR) return;
         if (plugin.getConfig().getString("Players." + e.getPlayer().getName() + ".Power").equalsIgnoreCase("Fire")) {
-            if (!activateJump) {
-                if (!FireJumpActiveTime.containsKey(e.getPlayer())) {
-                    FireJumpActiveTime.put(e.getPlayer(), activeTime);
+                if (activateJump.isEmpty() || !activateJump.containsKey(e.getPlayer ())) {
+                    if (!FireJumpActiveTime.containsKey(e.getPlayer())) {
+                        FireJumpActiveTime.put(e.getPlayer(), activeTime);
+                    }
                 }
-
-            }
             if (!FireJumpCooldown.isEmpty()) {
                 if (FireJumpCooldown.containsKey(e.getPlayer())) {
                     Utils.actionBar(e.getPlayer(), "&cUmiejętność jeszcze nie gotowa, poczekaj &6" + FireJumpCooldown.get(e.getPlayer()) + " sekund");
                     return;
                 }
             }
-            activateJump = true;
+            activateJump.put(e.getPlayer(),true);
             if (e.getPlayer().getGameMode() == GameMode.CREATIVE || e.getPlayer().getGameMode() == GameMode.SPECTATOR)
                 return;
             e.setCancelled(true);
@@ -172,7 +176,6 @@ public class Fire implements Listener {
                 for (int d = 0; d <= 90; d += 1) {
                     Location particleLoc = new Location(p.getLocation().getWorld(), p.getLocation().getX(), p.getLocation().getY(), p.getLocation().getZ());
                     particleLoc.setX(p.getLocation().getX() + Math.cos(d) * i);
-                    particleLoc.setZ(p.getLocation().getZ() + Math.sin(d) * i);
                     p.getLocation().getWorld().spawnParticle(Particle.REDSTONE, particleLoc, 1, new Particle.DustOptions(Color.RED, 1));
                 }
             }

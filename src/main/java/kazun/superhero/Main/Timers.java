@@ -63,6 +63,7 @@ public class Timers {
                             Fire.FireJumpActiveTime.remove(onlinePlayers);
                             onlinePlayers.setGliding(false);
                             Fire.FireJumpCooldown.put(onlinePlayers, Fire.cooldownTime);
+                            Fire.activateJump.remove(onlinePlayers);
                         } else {
                             timeLeft--;
                             Fire.FireJumpActiveTime.put(onlinePlayers, timeLeft);
