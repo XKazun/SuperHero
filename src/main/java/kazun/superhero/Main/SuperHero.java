@@ -1,10 +1,7 @@
 package kazun.superhero.Main;
 
 import kazun.superhero.Commands.Hero;
-import kazun.superhero.Powers.Fire;
-import kazun.superhero.Powers.Green;
-import kazun.superhero.Powers.Purple;
-import kazun.superhero.Powers.Red;
+import kazun.superhero.Powers.*;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class SuperHero extends JavaPlugin {
@@ -17,6 +14,7 @@ public final class SuperHero extends JavaPlugin {
         new Red(this);
         new Purple(this);
         new Green(this);
+        new Blue(this);
         Timers.OneSceonds();
         Timers.OneTick();
         Timers.TenTick();

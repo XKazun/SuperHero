@@ -177,6 +177,18 @@ public class Timers {
                         }
                     }
                 }
+                if (!Blue.swapCooldown.isEmpty()) {
+                    if (Blue.swapCooldown.containsKey(onlinePlayers)) {
+                        int i = Blue.swapCooldown.get(onlinePlayers);
+                        i--;
+                        if (i < 0) {
+                            Blue.swapCooldown.remove(onlinePlayers);
+                            onlinePlayers.playSound(onlinePlayers.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
+                        } else {
+                            Blue.swapCooldown.put(onlinePlayers, i);
+                        }
+                    }
+                }
                 if (!Blue.invisibleActiveTimePlayer.isEmpty()) {
                     if (Blue.invisibleActiveTimePlayer.containsKey(onlinePlayers)) {
                         int timeLeft = Blue.invisibleActiveTimePlayer.get(onlinePlayers);
@@ -362,9 +374,10 @@ public class Timers {
                 for (Player onlinePlayers : Bukkit.getOnlinePlayers()) {
                     if (!Fire.ActualComboTime.isEmpty()) {
                         if (Fire.ActualComboTime.containsKey(onlinePlayers)) {
-                            if (plugin.getConfig().getString("Players." + onlinePlayers.getName() + ".Power").equalsIgnoreCase("Fire")) {
-                                int actualTime = Fire.ActualComboTime.get(onlinePlayers);
-                                if (actualTime <= 0) {
+                            Fire.ActualComboTime.put(onlinePlayers, Fire.ActualComboTime.get(onlinePlayers) - 1);
+                            int actualTime = Fire.ActualComboTime.get(onlinePlayers);
+                            if (actualTime <= 0) {
+                                if (plugin.getConfig().getString("Players." + onlinePlayers.getName() + ".Power").equalsIgnoreCase("Fire")) {
                                     if (Fire.ActualComboCombination.get(onlinePlayers).equalsIgnoreCase(Fire.burnComboCombination)) {
                                         if (!Fire.burnComboCooldown.isEmpty()) {
                                             if (Fire.burnComboCooldown.containsKey(onlinePlayers)) {
@@ -375,8 +388,6 @@ public class Timers {
                                             }
                                         }
                                         Fire.burnComboCooldown.put(onlinePlayers, Fire.burnCooldownTime);
-                                        Fire.ActualComboCombination.remove(onlinePlayers);
-                                        Fire.ActualComboTime.remove(onlinePlayers);
                                         for (int i = 1; i <= 7; i += 2) {
                                             if (i != 1) {
                                                 for (Block b : getBlocks(onlinePlayers.getLocation(), i, true, false)) {
@@ -415,19 +426,11 @@ public class Timers {
                                                 }
                                             }, i * 2);
                                         }
-                                    } else {
-                                        Fire.ActualComboCombination.remove(onlinePlayers);
-                                        Fire.ActualComboTime.remove(onlinePlayers);
                                     }
-                                } else {
-                                    Fire.ActualComboTime.put(onlinePlayers, actualTime - 1);
                                 }
-                            }
-                            ArrayList<String> configPlayers = new ArrayList<>(Objects.requireNonNull(plugin.getConfig().getConfigurationSection("Players.")).getKeys(false));
-                            if (configPlayers.contains(onlinePlayers.getName())) {
-                                if (plugin.getConfig().getString("Players." + onlinePlayers.getName() + ".Power").equalsIgnoreCase("Red")) {
-                                    int actualTime = Fire.ActualComboTime.get(onlinePlayers);
-                                    if (actualTime <= 0) {
+                                ArrayList<String> configPlayers = new ArrayList<>(Objects.requireNonNull(plugin.getConfig().getConfigurationSection("Players.")).getKeys(false));
+                                if (configPlayers.contains(onlinePlayers.getName())) {
+                                    if (plugin.getConfig().getString("Players." + onlinePlayers.getName() + ".Power").equalsIgnoreCase("Red")) {
                                         if (Fire.ActualComboCombination.get(onlinePlayers).equalsIgnoreCase(Red.speedComboCombination)) {
                                             if (!Red.speedCooldown.isEmpty()) {
                                                 if (Red.speedCooldown.containsKey(onlinePlayers)) {
@@ -443,22 +446,13 @@ public class Timers {
                                             Fire.ActualComboCombination.remove(onlinePlayers);
                                             Fire.ActualComboTime.remove(onlinePlayers);
                                             Red.waterWalkTime.put(onlinePlayers, 30);
-                                        } else {
-                                            Fire.ActualComboCombination.remove(onlinePlayers);
-                                            Fire.ActualComboTime.remove(onlinePlayers);
                                         }
-                                    } else {
-                                        Fire.ActualComboTime.put(onlinePlayers, actualTime - 1);
                                     }
+
                                 }
-                            }
-                            if (plugin.getConfig().getString("Players." + onlinePlayers.getName() + ".Power").equalsIgnoreCase("Purple")) {
-                                int actualTime = Fire.ActualComboTime.get(onlinePlayers);
-                                if (actualTime <= 0) {
+                                if (plugin.getConfig().getString("Players." + onlinePlayers.getName() + ".Power").equalsIgnoreCase("Purple")) {
                                     if (!Fire.ActualComboCombination.isEmpty()) {
                                         if (Fire.ActualComboCombination.get(onlinePlayers).equalsIgnoreCase(Purple.dodgeComboCombination)) {
-                                            Fire.ActualComboCombination.remove(onlinePlayers);
-                                            Fire.ActualComboTime.remove(onlinePlayers);
                                             Location loc = onlinePlayers.getLocation();
                                             Vector dir = loc.getDirection();
                                             dir.normalize();
@@ -497,8 +491,6 @@ public class Timers {
                                                     return;
                                                 }
                                             }
-                                            Fire.ActualComboCombination.remove(onlinePlayers);
-                                            Fire.ActualComboTime.remove(onlinePlayers);
                                             Location loc = onlinePlayers.getLocation();
                                             Vector dir = loc.getDirection();
                                             dir.normalize();
@@ -533,18 +525,10 @@ public class Timers {
                                             Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(plugin, () -> {
                                                 onlinePlayers.teleport(finalLoc);
                                             }, 2);
-                                        } else {
-                                            Fire.ActualComboCombination.remove(onlinePlayers);
-                                            Fire.ActualComboTime.remove(onlinePlayers);
                                         }
-                                    } else {
-                                        Fire.ActualComboTime.put(onlinePlayers, actualTime - 1);
                                     }
                                 }
-                            }
-                            if (plugin.getConfig().getString("Players." + onlinePlayers.getName() + ".Power").equalsIgnoreCase("Blue")) {
-                                int actualTime = Fire.ActualComboTime.get(onlinePlayers);
-                                if (actualTime <= 0) {
+                                if (plugin.getConfig().getString("Players." + onlinePlayers.getName() + ".Power").equalsIgnoreCase("Blue")) {
                                     if (Fire.ActualComboCombination.get(onlinePlayers).equalsIgnoreCase(Blue.negativeComboCombination)) {
                                         if (!Blue.negativeCooldown.isEmpty()) {
                                             if (Blue.negativeCooldown.containsKey(onlinePlayers)) {
@@ -576,8 +560,6 @@ public class Timers {
                                                 onlinePlayers.getLocation().getWorld().spawnParticle(Particle.REDSTONE, particleLoc, 1, new Particle.DustOptions(Color.AQUA, 3));
                                             }
                                         }
-                                        Fire.ActualComboCombination.remove(onlinePlayers);
-                                        Fire.ActualComboTime.remove(onlinePlayers);
                                         Blue.negativeCooldown.put(onlinePlayers, Blue.negativeCooldownTime);
                                     }
                                     if (Fire.ActualComboCombination.get(onlinePlayers).equalsIgnoreCase(Blue.invisibleComboCombination)) {
@@ -589,24 +571,27 @@ public class Timers {
                                                 return;
                                             }
                                         }
-                                        for(Player hidePlayer: Bukkit.getOnlinePlayers()){
-                                            hidePlayer.hidePlayer(plugin,onlinePlayers);
+                                        for (Player hidePlayer : Bukkit.getOnlinePlayers()) {
+                                            hidePlayer.hidePlayer(plugin, onlinePlayers);
                                         }
                                         onlinePlayers.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 6 * 20, 1, false, false));
                                         onlinePlayers.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, 6 * 20, 1, false, false));
-                                        Fire.ActualComboCombination.remove(onlinePlayers);
-                                        Fire.ActualComboTime.remove(onlinePlayers);
                                         Blue.invisibleActiveTimePlayer.put(onlinePlayers, Blue.invisibleActiveTime);
                                     }
-                                    Fire.ActualComboCombination.remove(onlinePlayers);
-                                    Fire.ActualComboTime.remove(onlinePlayers);
-                                } else {
-                                    Fire.ActualComboTime.put(onlinePlayers, actualTime - 1);
+                                    if (Fire.ActualComboCombination.get(onlinePlayers).equalsIgnoreCase(Blue.swapComboCombination)) {
+                                        if (!Blue.swapCooldown.isEmpty()) {
+                                            if (Blue.swapCooldown.containsKey(onlinePlayers)) {
+                                                Utils.actionBar(onlinePlayers, "&cUmiejętność jeszcze nie gotowa, poczekaj &6" + Blue.swapCooldown.get(onlinePlayers) + " sekund");
+                                                Fire.ActualComboCombination.remove(onlinePlayers);
+                                                Fire.ActualComboTime.remove(onlinePlayers);
+                                                return;
+                                            }
+                                        }
+                                        Blue.openChooseInv(onlinePlayers);
+                                        Blue.swapCooldown.put(onlinePlayers, Blue.swapCooldownTime);
+                                    }
                                 }
-                            }
-                            if (plugin.getConfig().getString("Players." + onlinePlayers.getName() + ".Power").equalsIgnoreCase("Green")) {
-                                int actualTime = Fire.ActualComboTime.get(onlinePlayers);
-                                if (actualTime <= 0) {
+                                if (plugin.getConfig().getString("Players." + onlinePlayers.getName() + ".Power").equalsIgnoreCase("Green")) {
                                     if (Fire.ActualComboCombination.get(onlinePlayers).equalsIgnoreCase(Green.SuperStrengthComboCombination)) {
                                         if (!Green.SuperStrengthCooldown.isEmpty()) {
                                             if (Green.SuperStrengthCooldown.containsKey(onlinePlayers)) {
@@ -618,15 +603,8 @@ public class Timers {
                                         }
                                         Green.SuperStrengthActive.put(onlinePlayers, Green.SuperStrengthActiveTime);
                                     }
-                                    Fire.ActualComboCombination.remove(onlinePlayers);
-                                    Fire.ActualComboTime.remove(onlinePlayers);
-                                } else {
-                                    Fire.ActualComboTime.put(onlinePlayers, actualTime - 1);
                                 }
-                            }
-                            if (plugin.getConfig().getString("Players." + onlinePlayers.getName() + ".Power").equalsIgnoreCase("Yellow")) {
-                                int actualTime = Fire.ActualComboTime.get(onlinePlayers);
-                                if (actualTime <= 0) {
+                                if (plugin.getConfig().getString("Players." + onlinePlayers.getName() + ".Power").equalsIgnoreCase("Yellow")) {
                                     if (Fire.ActualComboCombination.get(onlinePlayers).equalsIgnoreCase(Yellow.lightningComboCombination)) {
                                         createLighting(onlinePlayers.getEyeLocation(), 30, onlinePlayers);
                                     }
@@ -650,45 +628,43 @@ public class Timers {
                                             }
                                         }
                                     }
-                                    Fire.ActualComboCombination.remove(onlinePlayers);
-                                    Fire.ActualComboTime.remove(onlinePlayers);
-                                } else {
-                                    Fire.ActualComboTime.put(onlinePlayers, actualTime - 1);
                                 }
+                                Fire.ActualComboCombination.remove(onlinePlayers);
+                                Fire.ActualComboTime.remove(onlinePlayers);
                             }
                         }
                     }
                 }
-            }
-            if(!Green.PunchEntity.isEmpty()) {
-                if(Green.PunchEntity !=null) {
-                    for (Entity entity : Green.PunchEntity) {
-                        if (entity.isDead()) {
-                            Green.PunchEntity.remove(entity);
-                        }
-                        entity.getLocation().getWorld().spawnParticle(Particle.CAMPFIRE_COSY_SMOKE, entity.getLocation().add(0, 1, 0), 5, 0.2, 0.2, 0.2, 0, null, true);
-                        if (entity.isOnGround() || entity.getVelocity().length() < 0.1) {
-                            Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(plugin, () -> {
-                                Green.PunchEntity.remove(entity);
-                            }, 1);
-
-                        }
-                    }
-                }
-            }
-            if(!Green.PowerPunchEntity.isEmpty()) {
-                if(Green.PowerPunchEntity !=null) {
-                    for (Entity entity : Green.PowerPunchEntity) {
-                        if (entity != null) {
+                if (!Green.PunchEntity.isEmpty()) {
+                    if (Green.PunchEntity != null) {
+                        for (Entity entity : Green.PunchEntity) {
                             if (entity.isDead()) {
-                                Green.PowerPunchEntity.remove(entity);
+                                Green.PunchEntity.remove(entity);
                             }
-                            entity.getLocation().getWorld().spawnParticle(Particle.VILLAGER_HAPPY, entity.getLocation(), 5, 0.2, 0.3, 0.2, 1, null, true);
-                            if (entity.getVelocity().length() < 0.1) {
+                            entity.getLocation().getWorld().spawnParticle(Particle.CAMPFIRE_COSY_SMOKE, entity.getLocation().add(0, 1, 0), 5, 0.2, 0.2, 0.2, 0, null, true);
+                            if (entity.isOnGround() || entity.getVelocity().length() < 0.1) {
                                 Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(plugin, () -> {
-                                    Green.PowerPunchEntity.remove(entity);
+                                    Green.PunchEntity.remove(entity);
                                 }, 1);
 
+                            }
+                        }
+                    }
+                }
+                if (!Green.PowerPunchEntity.isEmpty()) {
+                    if (Green.PowerPunchEntity != null) {
+                        for (Entity entity : Green.PowerPunchEntity) {
+                            if (entity != null) {
+                                if (entity.isDead()) {
+                                    Green.PowerPunchEntity.remove(entity);
+                                }
+                                entity.getLocation().getWorld().spawnParticle(Particle.VILLAGER_HAPPY, entity.getLocation(), 5, 0.2, 0.3, 0.2, 1, null, true);
+                                if (entity.getVelocity().length() < 0.1) {
+                                    Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(plugin, () -> {
+                                        Green.PowerPunchEntity.remove(entity);
+                                    }, 1);
+
+                                }
                             }
                         }
                     }
