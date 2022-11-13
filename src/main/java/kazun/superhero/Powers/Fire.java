@@ -11,11 +11,9 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerMoveEvent;
-import org.bukkit.event.player.PlayerToggleFlightEvent;
+import org.bukkit.event.player.*;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
@@ -56,6 +54,27 @@ public class Fire implements Listener {
             if(!configPlayers.contains(p.getName())) {
                 plugin.getConfig().set("Players."+ e.getPlayer().getName() +".Power", "Brak");
                 plugin.saveConfig();
+            }
+        }
+    }
+    @EventHandler
+    public void onPlayerUseBurn(EntityDamageByEntityEvent e) {
+        if (e.getDamager() instanceof Player) {
+            Player p = (Player) e.getDamager();
+            if (p.getInventory().getItemInMainHand() != null) {
+                if (p.getInventory().getItemInMainHand().isSimilar(new ItemStack(Material.LEATHER_HORSE_ARMOR))) {
+                    if (!ActualComboCombination.isEmpty()) {
+                        if (ActualComboCombination.containsKey(p)) {
+                            ActualComboCombination.put(p, ActualComboCombination.get(p) + "L ");
+                        } else {
+                            ActualComboCombination.put(p, "L ");
+                        }
+                    } else {
+                        ActualComboCombination.put(p, "L ");
+                    }
+                }
+                Utils.actionBar(p, "&aCombo: &6" + ActualComboCombination.get(p));
+                ActualComboTime.put(p, millisecondsToMakeCombination);
             }
         }
     }

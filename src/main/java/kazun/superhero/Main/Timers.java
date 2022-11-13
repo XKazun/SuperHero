@@ -621,8 +621,10 @@ public class Timers {
                                                 if (entities instanceof Player) {
                                                     if (!onlinePlayers.equals(((Player) entities).getPlayer())) {
                                                         location.getWorld().spawnParticle(Particle.REDSTONE, entities.getLocation().add(0, 1, 0), 30, 0.5, 0.5, 0.5, new Particle.DustOptions(Color.RED, 2));
+                                                        ((LivingEntity) entities).addPotionEffect(new PotionEffect(PotionEffectType.HARM, 1, 1, false,false));
                                                     }
                                                 } else {
+                                                    ((LivingEntity) entities).addPotionEffect(new PotionEffect(PotionEffectType.HARM, 1, 1, false,false));
                                                     location.getWorld().spawnParticle(Particle.REDSTONE, entities.getLocation().add(0, 1, 0), 30, 0.5, 0.5, 0.5, new Particle.DustOptions(Color.RED, 2));
                                                 }
                                             }
@@ -638,15 +640,19 @@ public class Timers {
                 if (!Green.PunchEntity.isEmpty()) {
                     if (Green.PunchEntity != null) {
                         for (Entity entity : Green.PunchEntity) {
-                            if (entity.isDead()) {
-                                Green.PunchEntity.remove(entity);
-                            }
-                            entity.getLocation().getWorld().spawnParticle(Particle.CAMPFIRE_COSY_SMOKE, entity.getLocation().add(0, 1, 0), 5, 0.2, 0.2, 0.2, 0, null, true);
-                            if (entity.isOnGround() || entity.getVelocity().length() < 0.1) {
-                                Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(plugin, () -> {
+                            if (entity != null) {
+                                if (entity.isDead()) {
                                     Green.PunchEntity.remove(entity);
-                                }, 1);
+                                }
+                                entity.getLocation().getWorld().spawnParticle(Particle.CAMPFIRE_COSY_SMOKE, entity.getLocation().add(0, 1, 0), 5, 0.2, 0.2, 0.2, 0, null, true);
+                                if (entity.isOnGround() || entity.getVelocity().length() < 0.1) {
+                                    Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(plugin, () -> {
+                                        Green.PunchEntity.remove(entity);
+                                    }, 1);
 
+                                }
+                            }else{
+                                Green.PunchEntity.remove(entity);
                             }
                         }
                     }
@@ -713,11 +719,15 @@ public class Timers {
                     if(entities instanceof Player) {
                         if (!player.equals(((Player) entities).getPlayer())){
                             loc.getWorld().spawnParticle(Particle.REDSTONE, entities.getLocation().add(0,1,0), 30,0.5,0.5,0.5, new Particle.DustOptions(Color.RED, 2));
-                            ((LivingEntity) entities).addPotionEffect(new PotionEffect(PotionEffectType.HARM, 1, 1, false,false));
-                        }
+                            if(((LivingEntity) entities).getHealth()<=5){
+                                ((LivingEntity) entities).setHealth(0);
+                            }else ((LivingEntity) entities).setHealth(((LivingEntity) entities).getHealth() -5);
+                           }
                     }else {
                         loc.getWorld().spawnParticle(Particle.REDSTONE, entities.getLocation().add(0, 1, 0), 30, 0.5, 0.5, 0.5, new Particle.DustOptions(Color.RED, 2));
-                        ((LivingEntity) entities).addPotionEffect(new PotionEffect(PotionEffectType.HARM, 1, 1, false, false));
+                        if(((LivingEntity) entities).getHealth()<=5){
+                            ((LivingEntity) entities).setHealth(0);
+                        }else ((LivingEntity) entities).setHealth(((LivingEntity) entities).getHealth() -5);
                     }
                 }
             }
