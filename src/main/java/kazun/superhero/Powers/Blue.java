@@ -3,6 +3,8 @@ package kazun.superhero.Powers;
 import kazun.superhero.Main.SuperHero;
 import kazun.superhero.Main.Utils;
 import org.bukkit.*;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -12,6 +14,9 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
+import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -40,48 +45,69 @@ public class Blue implements Listener {
 
     public static int invisibleActiveTime = 5;
 
-    public static void openChooseInv(Player player){
-        Inventory Inv = Bukkit.createInventory(null, 9, Utils.chat("&0Wybierz gracza do zamiany"));
-        int slot =1;
-        for(Player onlinePlayers:Bukkit.getOnlinePlayers()){
-            if(!onlinePlayers.equals(player)) {
-                ItemStack playerHead = new ItemStack(Material.PLAYER_HEAD);
-                SkullMeta playerHeadMeta = (SkullMeta) playerHead.getItemMeta();
-                playerHeadMeta.setOwningPlayer(onlinePlayers);
-                playerHead.setItemMeta(playerHeadMeta);
-                Utils.createItemStack(Inv, playerHead, slot, "&a" + onlinePlayers.getName());
-                slot++;
-                if (slot > Inv.getSize()) {
-                    Inv = Bukkit.createInventory(null, Inv.getSize() + 9, Utils.chat("&0Wybierz gracza do zamiany"));
+    public static int swapPlayerDistance = 10;
+
+    public static void comboPlayerSwapActive(Player player) {
+        Location loc = player.getLocation().add(0, 1, 0).clone();
+        Vector dir = loc.getDirection();
+        for (double i = 1; i < swapPlayerDistance; i += 0.5) {
+            dir.multiply(i);
+            loc.add(dir);
+            loc.getWorld().spawnParticle(Particle.REDSTONE, loc.clone(), 10, 0.5, 0.5, 0.5, 0, new Particle.DustOptions(Color.AQUA, 2), true);
+            dir.normalize();
+            boolean teleportPlayer = false;
+            ArrayList<Entity> nearbyEntities = new ArrayList<>();
+            nearbyEntities = (ArrayList<Entity>) loc.getWorld().getNearbyEntities(loc, 0.5, 0.5, 0.5);
+            for (Entity entities : nearbyEntities) {
+                if (entities instanceof Player) {
+                    if (!player.equals(((Player) entities).getPlayer())) {
+                        entities.getWorld().spawnParticle(Particle.REDSTONE, entities.getLocation().add(0, 1, 0), 30, 0.5, 0.5, 0.5, new Particle.DustOptions(Color.PURPLE, 2));
+                        Location teleportTo = player.getLocation().clone();
+                        player.teleport(entities);
+                        entities.teleport(teleportTo);
+                        teleportPlayer=true;
+                        swapCooldown.put(player, swapCooldownTime);
+                        break;
+                    }
+                }
+            }
+            if(teleportPlayer){
+               break;
+            }
+        }
+    }
+
+    public static void comboEffectActivate(Player player){
+        ArrayList<Entity> nearbyEntities = new ArrayList<>();
+        nearbyEntities = (ArrayList<Entity>) player.getNearbyEntities(10.0, 10.0, 10.0);
+        for (Entity entities : nearbyEntities) {
+            if (entities instanceof LivingEntity) {
+                player.getLocation().getWorld().spawnParticle(Particle.REDSTONE, entities.getLocation().add(0, 1, 0), 30, 0.5, 0.5, 0.5, new Particle.DustOptions(Color.BLUE, 2));
+                ((LivingEntity) entities).addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 30 * 20, 3, false, false));
+                ((LivingEntity) entities).addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 30 * 20, 3, false, false));
+                ((LivingEntity) entities).addPotionEffect(new PotionEffect(PotionEffectType.HUNGER, 30 * 20, 3, false, false));
+                if (entities.getWorld().getTime() > 13000 && entities.getWorld().getTime() < 23000) {
+                    ((LivingEntity) entities).addPotionEffect(new PotionEffect(PotionEffectType.CONFUSION, 30 * 20, 3, false, false));
+                    ((LivingEntity) entities).addPotionEffect(new PotionEffect(PotionEffectType.SLOW_DIGGING, 30 * 20, 3, false, false));
                 }
             }
         }
-        player.openInventory(Inv);
-    }
-
-    @EventHandler
-    public void onInventoryClick(InventoryClickEvent e) {
-        Player p = (Player) e.getWhoClicked();
-        if (e.getView().getTitle().contains(Utils.chat("&0Wybierz gracza do zamiany"))) {
-            e.setCancelled(true);
-            if (e.isShiftClick()) return;
-            if (e.getCurrentItem() == null || (e.getCurrentItem().getType().equals(Material.AIR))) {
-                return;
-            } else {
-                String name = e.getCurrentItem().getItemMeta().getDisplayName();
-                name = name.replace(Utils.chat("&a"),"");
-                Player player = Bukkit.getPlayer(name);
-                Location playerLocation = player.getLocation();
-                Location playerLocation2 = p.getLocation();
-                player.teleport(playerLocation2);
-                p.teleport(playerLocation);
-
-                player.getLocation().getWorld().spawnParticle(Particle.REDSTONE, p.getLocation(), 20, 0.5, 0.5, 0.5, new Particle.DustOptions(Color.AQUA, 1));
-                p.getLocation().getWorld().spawnParticle(Particle.REDSTONE, p.getLocation(), 20, 0.5, 0.5, 0.5, new Particle.DustOptions(Color.AQUA, 1));
-
-                p.closeInventory();
-                return;
+        for (int i = 0; i <= 10; i += 2) {
+            for (int d = 0; d <= 90; d += 1) {
+                Location particleLoc = player.getLocation().clone();
+                particleLoc.setX(player.getLocation().getX() + Math.cos(d) * i);
+                particleLoc.setZ(player.getLocation().getZ() + Math.sin(d) * i);
+                player.getLocation().getWorld().spawnParticle(Particle.REDSTONE, particleLoc, 1, new Particle.DustOptions(Color.AQUA, 3));
             }
         }
+        negativeCooldown.put(player, negativeCooldownTime);
+    }
+    public static void comboInvisibleActivate(Player player){
+        for (Player hidePlayer : Bukkit.getOnlinePlayers()) {
+            hidePlayer.hidePlayer(plugin, player);
+        }
+        player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, invisibleActiveTime * 20, 1, false, false));
+        player.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, invisibleActiveTime * 20, 1, false, false));
+        invisibleActiveTimePlayer.put(player, invisibleActiveTime);
     }
 }

@@ -39,7 +39,7 @@ public class Red implements Listener {
     public static int waterWalkCooldownTime = 60;
     public static int waterWalkActiveTime = 30;
 
-    @Deprecated
+
     @EventHandler
     public void onPlayerUseSpeed(PlayerMoveEvent e) {
         Player p = e.getPlayer();

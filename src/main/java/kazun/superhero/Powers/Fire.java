@@ -63,6 +63,12 @@ public class Fire implements Listener {
             Player p = (Player) e.getDamager();
             if (p.getInventory().getItemInMainHand() != null) {
                 if (p.getInventory().getItemInMainHand().isSimilar(new ItemStack(Material.LEATHER_HORSE_ARMOR))) {
+                    if(!ActualComboTime.isEmpty()){
+                        if(ActualComboTime.get(p) <=0){
+                            ActualComboCombination.remove(p);
+                            ActualComboTime.remove(p);
+                        }
+                    }
                     if (!ActualComboCombination.isEmpty()) {
                         if (ActualComboCombination.containsKey(p)) {
                             ActualComboCombination.put(p, ActualComboCombination.get(p) + "L ");
@@ -72,9 +78,9 @@ public class Fire implements Listener {
                     } else {
                         ActualComboCombination.put(p, "L ");
                     }
+                    Utils.actionBar(p, "&aCombo: &6" + ActualComboCombination.get(p));
+                    ActualComboTime.put(p, millisecondsToMakeCombination);
                 }
-                Utils.actionBar(p, "&aCombo: &6" + ActualComboCombination.get(p));
-                ActualComboTime.put(p, millisecondsToMakeCombination);
             }
         }
     }

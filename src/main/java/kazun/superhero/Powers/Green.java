@@ -47,7 +47,6 @@ public class Green implements Listener {
                 Player p = (Player) e.getDamager();
                 if (plugin.getConfig().getString("Players." + p.getName() + ".Power").equalsIgnoreCase("Green")) {
                     if (SuperStrengthActive.containsKey(p)) {
-
                         if(e.getDamage() * 40<= ((LivingEntity)e.getEntity()).getHealth()){
                             ((LivingEntity)e.getEntity()).setHealth(1);
                         }else{

@@ -372,304 +372,190 @@ public class Timers {
         Bukkit.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, () -> {
             if(!Fire.ActualComboCombination.isEmpty()) {
                 for (Player onlinePlayers : Bukkit.getOnlinePlayers()) {
-                    if (!Fire.ActualComboTime.isEmpty()) {
-                        if (Fire.ActualComboTime.containsKey(onlinePlayers)) {
-                            Fire.ActualComboTime.put(onlinePlayers, Fire.ActualComboTime.get(onlinePlayers) - 1);
-                            int actualTime = Fire.ActualComboTime.get(onlinePlayers);
-                            if (actualTime <= 0) {
-                                if (plugin.getConfig().getString("Players." + onlinePlayers.getName() + ".Power").equalsIgnoreCase("Fire")) {
-                                    if (Fire.ActualComboCombination.get(onlinePlayers).equalsIgnoreCase(Fire.burnComboCombination)) {
-                                        if (!Fire.burnComboCooldown.isEmpty()) {
-                                            if (Fire.burnComboCooldown.containsKey(onlinePlayers)) {
-                                                Utils.actionBar(onlinePlayers, "&cUmiejętność jeszcze nie gotowa, poczekaj &6" + Fire.burnComboCooldown.get(onlinePlayers) + " sekund");
-                                                Fire.ActualComboCombination.remove(onlinePlayers);
-                                                Fire.ActualComboTime.remove(onlinePlayers);
-                                                return;
-                                            }
-                                        }
-                                        Fire.burnComboCooldown.put(onlinePlayers, Fire.burnCooldownTime);
-                                        for (int i = 1; i <= 7; i += 2) {
-                                            if (i != 1) {
-                                                for (Block b : getBlocks(onlinePlayers.getLocation(), i, true, false)) {
-                                                    if (b.isEmpty()) {
-                                                        b.setType(Material.FIRE);
-                                                        Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(plugin, () -> {
-                                                            b.setType(Material.AIR);
-                                                        }, 6 * i);
+                    ArrayList<String> configPlayers = new ArrayList<>(Objects.requireNonNull(plugin.getConfig().getConfigurationSection("Players.")).getKeys(false));
+                    if (configPlayers.contains(onlinePlayers.getName())) {
+                        if (Fire.ActualComboCombination.containsKey(onlinePlayers)) {
+                            if (!Fire.ActualComboTime.isEmpty()) {
+                                if (Fire.ActualComboTime.containsKey(onlinePlayers)) {
+                                    Fire.ActualComboTime.put(onlinePlayers, Fire.ActualComboTime.get(onlinePlayers) - 1);
+                                    int actualTime = Fire.ActualComboTime.get(onlinePlayers);
+                                    if (actualTime <= 0) {
+                                        String ActualComboCombination = Fire.ActualComboCombination.get(onlinePlayers);
+                                        Fire.ActualComboCombination.remove(onlinePlayers);
+                                        Fire.ActualComboTime.remove(onlinePlayers);
+                                        if (plugin.getConfig().getString("Players." + onlinePlayers.getName() + ".Power").equalsIgnoreCase("Fire")) {
+                                            if (ActualComboCombination.equalsIgnoreCase(Fire.burnComboCombination)) {
+                                                if (!Fire.burnComboCooldown.isEmpty()) {
+                                                    if (Fire.burnComboCooldown.containsKey(onlinePlayers)) {
+                                                        Utils.actionBar(onlinePlayers, "&cUmiejętność jeszcze nie gotowa, poczekaj &6" + Fire.burnComboCooldown.get(onlinePlayers) + " sekund");
+                                                        return;
                                                     }
-
                                                 }
-                                            }
-                                            ArrayList<Entity> entities = new ArrayList<>();
-                                            entities = (ArrayList<Entity>) onlinePlayers.getWorld().getNearbyEntities(onlinePlayers.getLocation(), i / 1.1, 2.5, i / 1.1);
-                                            for (Entity entity : entities) {
-                                                if (!entity.isVisualFire()) {
-                                                    if (entity instanceof LivingEntity) {
-                                                        if (!entity.getType().equals(EntityType.PLAYER)) {
-                                                            entity.setFireTicks(20 * 10);
-                                                        } else {
-                                                            Player player = ((Player) entity).getPlayer();
-                                                            if (!player.equals(onlinePlayers)) {
-                                                                entity.setFireTicks(20 * 10);
+                                                Fire.burnComboCooldown.put(onlinePlayers, Fire.burnCooldownTime);
+                                                for (int i = 1; i <= 7; i += 2) {
+                                                    if (i != 1) {
+                                                        for (Block b : getBlocks(onlinePlayers.getLocation(), i, true, false)) {
+                                                            if (b.isEmpty()) {
+                                                                b.setType(Material.FIRE);
+                                                                Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(plugin, () -> {
+                                                                    b.setType(Material.AIR);
+                                                                }, 6 * i);
+                                                            }
+
+                                                        }
+                                                    }
+                                                    ArrayList<Entity> entities = new ArrayList<>();
+                                                    entities = (ArrayList<Entity>) onlinePlayers.getWorld().getNearbyEntities(onlinePlayers.getLocation(), i / 1.1, 2.5, i / 1.1);
+                                                    for (Entity entity : entities) {
+                                                        if (!entity.isVisualFire()) {
+                                                            if (entity instanceof LivingEntity) {
+                                                                if (!entity.getType().equals(EntityType.PLAYER)) {
+                                                                    entity.setFireTicks(20 * 10);
+                                                                } else {
+                                                                    Player player = ((Player) entity).getPlayer();
+                                                                    if (!player.equals(onlinePlayers)) {
+                                                                        entity.setFireTicks(20 * 10);
+                                                                    }
+                                                                }
                                                             }
                                                         }
                                                     }
-                                                }
-                                            }
-                                            int finalI = i;
-                                            Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(plugin, () -> {
-                                                for (int d = 0; d <= 90; d += 1) {
-                                                    Location particleLoc = new Location(onlinePlayers.getLocation().getWorld(), onlinePlayers.getLocation().getX(), onlinePlayers.getLocation().getY(), onlinePlayers.getLocation().getZ());
-                                                    particleLoc.setX(onlinePlayers.getLocation().getX() + Math.cos(d) * finalI);
-                                                    particleLoc.setZ(onlinePlayers.getLocation().getZ() + Math.sin(d) * finalI);
-                                                    onlinePlayers.getLocation().getWorld().spawnParticle(Particle.FLAME, particleLoc.add(0, 1, 0), 10, 0, 1, 0, 0);
-                                                }
-                                            }, i * 2);
-                                        }
-                                    }
-                                }
-                                ArrayList<String> configPlayers = new ArrayList<>(Objects.requireNonNull(plugin.getConfig().getConfigurationSection("Players.")).getKeys(false));
-                                if (configPlayers.contains(onlinePlayers.getName())) {
-                                    if (plugin.getConfig().getString("Players." + onlinePlayers.getName() + ".Power").equalsIgnoreCase("Red")) {
-                                        if (Fire.ActualComboCombination.get(onlinePlayers).equalsIgnoreCase(Red.speedComboCombination)) {
-                                            if (!Red.speedCooldown.isEmpty()) {
-                                                if (Red.speedCooldown.containsKey(onlinePlayers)) {
-                                                    Utils.actionBar(onlinePlayers, "&cUmiejętność jeszcze nie gotowa, poczekaj &6" + Red.speedCooldown.get(onlinePlayers) + " sekund");
-                                                    Fire.ActualComboCombination.remove(onlinePlayers);
-                                                    Fire.ActualComboTime.remove(onlinePlayers);
-                                                    return;
-                                                }
-                                            }
-                                            onlinePlayers.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 30 * 20, 8, false, false));
-                                            onlinePlayers.addPotionEffect(new PotionEffect(PotionEffectType.JUMP, 30 * 20, 3, false, false));
-                                            Red.activateSpeed.put(onlinePlayers, true);
-                                            Fire.ActualComboCombination.remove(onlinePlayers);
-                                            Fire.ActualComboTime.remove(onlinePlayers);
-                                            Red.waterWalkTime.put(onlinePlayers, 30);
-                                        }
-                                    }
-
-                                }
-                                if (plugin.getConfig().getString("Players." + onlinePlayers.getName() + ".Power").equalsIgnoreCase("Purple")) {
-                                    if (!Fire.ActualComboCombination.isEmpty()) {
-                                        if (Fire.ActualComboCombination.get(onlinePlayers).equalsIgnoreCase(Purple.dodgeComboCombination)) {
-                                            Location loc = onlinePlayers.getLocation();
-                                            Vector dir = loc.getDirection();
-                                            dir.normalize();
-                                            int dirLoc = 0;
-                                            for (int i = 0; i < 5; i++) {
-                                                loc = onlinePlayers.getLocation();
-                                                dir = loc.getDirection();
-                                                loc.add(0, 0.5, 0);
-                                                dir.normalize();
-                                                dir.multiply(-i);
-                                                loc.add(dir);
-                                                if (loc.getBlock().isEmpty()) {
-                                                    dirLoc = -i;
-                                                    loc.getWorld().spawnParticle(Particle.REDSTONE, loc, 1, new Particle.DustOptions(Color.PURPLE, 3));
-                                                }
-                                            }
-                                            loc = onlinePlayers.getLocation();
-                                            dir = loc.getDirection();
-                                            loc.add(0, 0.5, 0);
-                                            dir.normalize();
-                                            dir.multiply(dirLoc);
-                                            loc.add(dir);
-                                            onlinePlayers.getLocation().getWorld().spawnParticle(Particle.REDSTONE, onlinePlayers.getLocation(), 100, 0.5, 0.9, 0.5, 0, new Particle.DustOptions(Color.PURPLE, 1));
-                                            loc.getWorld().spawnParticle(Particle.REDSTONE, loc, 100, 0.5, 0.9, 0.5, 0, new Particle.DustOptions(Color.PURPLE, 1));
-                                            Location finalLoc = loc;
-                                            Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(plugin, () -> {
-                                                onlinePlayers.teleport(finalLoc);
-                                            }, 2);
-                                        }
-                                        if (Fire.ActualComboCombination.get(onlinePlayers).equalsIgnoreCase(Purple.teleportComboCombination)) {
-                                            if (!Purple.teleportCooldown.isEmpty()) {
-                                                if (Purple.teleportCooldown.containsKey(onlinePlayers)) {
-                                                    Utils.actionBar(onlinePlayers, "&cUmiejętność jeszcze nie gotowa, poczekaj &6" + Purple.teleportCooldown.get(onlinePlayers) + " sekund");
-                                                    Fire.ActualComboCombination.remove(onlinePlayers);
-                                                    Fire.ActualComboTime.remove(onlinePlayers);
-                                                    return;
-                                                }
-                                            }
-                                            Location loc = onlinePlayers.getLocation();
-                                            Vector dir = loc.getDirection();
-                                            dir.normalize();
-                                            int dirLoc = 0;
-                                            for (int i = 0; i < 30; i++) {
-                                                loc = onlinePlayers.getLocation();
-                                                dir = loc.getDirection();
-                                                loc.add(0, 0.5, 0);
-                                                dir.normalize();
-                                                dir.multiply(i);
-                                                loc.add(dir);
-                                                if (loc.getBlock().isEmpty()) {
-                                                    dirLoc = i;
-                                                    loc.getWorld().spawnParticle(Particle.REDSTONE, loc, 1, new Particle.DustOptions(Color.PURPLE, 3));
-                                                }
-                                            }
-                                            loc = onlinePlayers.getLocation();
-                                            dir = loc.getDirection();
-                                            loc.add(0, 0.5, 0);
-                                            dir.normalize();
-                                            dir.multiply(dirLoc);
-                                            loc.add(dir);
-                                            if (!loc.getBlock().isEmpty()) {
-                                                Utils.actionBar(onlinePlayers, "&cNie możesz teleportować się w środek bloku");
-                                                onlinePlayers.playSound(onlinePlayers.getLocation(), Sound.BLOCK_LAVA_EXTINGUISH, 1, 1);
-                                                return;
-                                            }
-                                            onlinePlayers.getLocation().getWorld().spawnParticle(Particle.REDSTONE, onlinePlayers.getLocation(), 100, 0.5, 0.9, 0.5, 0, new Particle.DustOptions(Color.PURPLE, 1));
-                                            loc.getWorld().spawnParticle(Particle.REDSTONE, loc, 100, 0.5, 0.9, 0.5, 0, new Particle.DustOptions(Color.PURPLE, 1));
-                                            Purple.teleportCooldown.put(onlinePlayers, Purple.teleportCooldownTime);
-                                            Location finalLoc = loc;
-                                            Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(plugin, () -> {
-                                                onlinePlayers.teleport(finalLoc);
-                                            }, 2);
-                                        }
-                                    }
-                                }
-                                if (plugin.getConfig().getString("Players." + onlinePlayers.getName() + ".Power").equalsIgnoreCase("Blue")) {
-                                    if (Fire.ActualComboCombination.get(onlinePlayers).equalsIgnoreCase(Blue.negativeComboCombination)) {
-                                        if (!Blue.negativeCooldown.isEmpty()) {
-                                            if (Blue.negativeCooldown.containsKey(onlinePlayers)) {
-                                                Utils.actionBar(onlinePlayers, "&cUmiejętność jeszcze nie gotowa, poczekaj &6" + Blue.negativeCooldown.get(onlinePlayers) + " sekund");
-                                                Fire.ActualComboCombination.remove(onlinePlayers);
-                                                Fire.ActualComboTime.remove(onlinePlayers);
-                                                return;
-                                            }
-                                        }
-                                        ArrayList<Entity> nearbyEntities = new ArrayList<>();
-                                        nearbyEntities = (ArrayList<Entity>) onlinePlayers.getNearbyEntities(10.0, 10.0, 10.0);
-                                        for (Entity entities : nearbyEntities) {
-                                            if (entities instanceof LivingEntity) {
-                                                onlinePlayers.getLocation().getWorld().spawnParticle(Particle.REDSTONE, entities.getLocation().add(0, 1, 0), 30, 0.5, 0.5, 0.5, new Particle.DustOptions(Color.BLUE, 2));
-                                                ((LivingEntity) entities).addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 30 * 20, 3, false, false));
-                                                ((LivingEntity) entities).addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 30 * 20, 3, false, false));
-                                                ((LivingEntity) entities).addPotionEffect(new PotionEffect(PotionEffectType.HUNGER, 30 * 20, 3, false, false));
-                                                if (entities.getWorld().getTime() > 800) {
-                                                    ((LivingEntity) entities).addPotionEffect(new PotionEffect(PotionEffectType.CONFUSION, 30 * 20, 3, false, false));
-                                                    ((LivingEntity) entities).addPotionEffect(new PotionEffect(PotionEffectType.SLOW_DIGGING, 30 * 20, 3, false, false));
+                                                    int finalI = i;
+                                                    Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(plugin, () -> {
+                                                        for (int d = 0; d <= 90; d += 1) {
+                                                            Location particleLoc = new Location(onlinePlayers.getLocation().getWorld(), onlinePlayers.getLocation().getX(), onlinePlayers.getLocation().getY(), onlinePlayers.getLocation().getZ());
+                                                            particleLoc.setX(onlinePlayers.getLocation().getX() + Math.cos(d) * finalI);
+                                                            particleLoc.setZ(onlinePlayers.getLocation().getZ() + Math.sin(d) * finalI);
+                                                            onlinePlayers.getLocation().getWorld().spawnParticle(Particle.FLAME, particleLoc.add(0, 1, 0), 10, 0, 1, 0, 0);
+                                                        }
+                                                    }, i * 2);
                                                 }
                                             }
                                         }
-                                        for (int i = 0; i <= 10; i += 2) {
-                                            for (int d = 0; d <= 90; d += 1) {
-                                                Location particleLoc = new Location(onlinePlayers.getLocation().getWorld(), onlinePlayers.getLocation().getX(), onlinePlayers.getLocation().getY(), onlinePlayers.getLocation().getZ());
-                                                particleLoc.setX(onlinePlayers.getLocation().getX() + Math.cos(d) * i);
-                                                particleLoc.setZ(onlinePlayers.getLocation().getZ() + Math.sin(d) * i);
-                                                onlinePlayers.getLocation().getWorld().spawnParticle(Particle.REDSTONE, particleLoc, 1, new Particle.DustOptions(Color.AQUA, 3));
-                                            }
-                                        }
-                                        Blue.negativeCooldown.put(onlinePlayers, Blue.negativeCooldownTime);
-                                    }
-                                    if (Fire.ActualComboCombination.get(onlinePlayers).equalsIgnoreCase(Blue.invisibleComboCombination)) {
-                                        if (!Blue.invisibleCooldown.isEmpty()) {
-                                            if (Blue.invisibleCooldown.containsKey(onlinePlayers)) {
-                                                Utils.actionBar(onlinePlayers, "&cUmiejętność jeszcze nie gotowa, poczekaj &6" + Blue.invisibleCooldown.get(onlinePlayers) + " sekund");
-                                                Fire.ActualComboCombination.remove(onlinePlayers);
-                                                Fire.ActualComboTime.remove(onlinePlayers);
-                                                return;
-                                            }
-                                        }
-                                        for (Player hidePlayer : Bukkit.getOnlinePlayers()) {
-                                            hidePlayer.hidePlayer(plugin, onlinePlayers);
-                                        }
-                                        onlinePlayers.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 6 * 20, 1, false, false));
-                                        onlinePlayers.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, 6 * 20, 1, false, false));
-                                        Blue.invisibleActiveTimePlayer.put(onlinePlayers, Blue.invisibleActiveTime);
-                                    }
-                                    if (Fire.ActualComboCombination.get(onlinePlayers).equalsIgnoreCase(Blue.swapComboCombination)) {
-                                        if (!Blue.swapCooldown.isEmpty()) {
-                                            if (Blue.swapCooldown.containsKey(onlinePlayers)) {
-                                                Utils.actionBar(onlinePlayers, "&cUmiejętność jeszcze nie gotowa, poczekaj &6" + Blue.swapCooldown.get(onlinePlayers) + " sekund");
-                                                Fire.ActualComboCombination.remove(onlinePlayers);
-                                                Fire.ActualComboTime.remove(onlinePlayers);
-                                                return;
-                                            }
-                                        }
-                                        Blue.openChooseInv(onlinePlayers);
-                                        Blue.swapCooldown.put(onlinePlayers, Blue.swapCooldownTime);
-                                    }
-                                }
-                                if (plugin.getConfig().getString("Players." + onlinePlayers.getName() + ".Power").equalsIgnoreCase("Green")) {
-                                    if (Fire.ActualComboCombination.get(onlinePlayers).equalsIgnoreCase(Green.SuperStrengthComboCombination)) {
-                                        if (!Green.SuperStrengthCooldown.isEmpty()) {
-                                            if (Green.SuperStrengthCooldown.containsKey(onlinePlayers)) {
-                                                Utils.actionBar(onlinePlayers, "&cUmiejętność jeszcze nie gotowa, poczekaj &6" + Green.SuperStrengthCooldown.get(onlinePlayers) + " sekund");
-                                                Fire.ActualComboCombination.remove(onlinePlayers);
-                                                Fire.ActualComboTime.remove(onlinePlayers);
-                                                return;
-                                            }
-                                        }
-                                        Green.SuperStrengthActive.put(onlinePlayers, Green.SuperStrengthActiveTime);
-                                    }
-                                }
-                                if (plugin.getConfig().getString("Players." + onlinePlayers.getName() + ".Power").equalsIgnoreCase("Yellow")) {
-                                    if (Fire.ActualComboCombination.get(onlinePlayers).equalsIgnoreCase(Yellow.lightningComboCombination)) {
-                                        createLighting(onlinePlayers.getEyeLocation(), 30, onlinePlayers);
-                                    }
-                                    if (Fire.ActualComboCombination.get(onlinePlayers).equalsIgnoreCase(Yellow.lightningsComboCombination)) {
-                                        Location location = onlinePlayers.getTargetBlock(null, 50).getLocation();
-                                        location.getWorld().strikeLightning(location);
-                                        Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(plugin, () -> {
-                                            location.getWorld().strikeLightning(location);
-                                        }, 10);
-                                        ArrayList<Entity> nearbyEntities = new ArrayList<>();
-                                        nearbyEntities = (ArrayList<Entity>) location.getWorld().getNearbyEntities(location, 2.0, 2.0, 2.0);
-                                        for (Entity entities : nearbyEntities) {
-                                            if (entities instanceof LivingEntity) {
-                                                if (entities instanceof Player) {
-                                                    if (!onlinePlayers.equals(((Player) entities).getPlayer())) {
-                                                        location.getWorld().spawnParticle(Particle.REDSTONE, entities.getLocation().add(0, 1, 0), 30, 0.5, 0.5, 0.5, new Particle.DustOptions(Color.RED, 2));
-                                                        ((LivingEntity) entities).addPotionEffect(new PotionEffect(PotionEffectType.HARM, 1, 1, false,false));
+                                        if (plugin.getConfig().getString("Players." + onlinePlayers.getName() + ".Power").equalsIgnoreCase("Red")) {
+                                            if (ActualComboCombination.equalsIgnoreCase(Red.speedComboCombination)) {
+                                                if (!Red.speedCooldown.isEmpty()) {
+                                                    if (Red.speedCooldown.containsKey(onlinePlayers)) {
+                                                        Utils.actionBar(onlinePlayers, "&cUmiejętność jeszcze nie gotowa, poczekaj &6" + Red.speedCooldown.get(onlinePlayers) + " sekund");
+                                                        return;
                                                     }
-                                                } else {
-                                                    ((LivingEntity) entities).addPotionEffect(new PotionEffect(PotionEffectType.HARM, 1, 1, false,false));
-                                                    location.getWorld().spawnParticle(Particle.REDSTONE, entities.getLocation().add(0, 1, 0), 30, 0.5, 0.5, 0.5, new Particle.DustOptions(Color.RED, 2));
                                                 }
+                                                onlinePlayers.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 30 * 20, 8, false, false));
+                                                onlinePlayers.addPotionEffect(new PotionEffect(PotionEffectType.JUMP, 30 * 20, 3, false, false));
+                                                Red.activateSpeed.put(onlinePlayers, true);
+                                                Red.waterWalkTime.put(onlinePlayers, 30);
+                                            }
+                                        }
+                                        if (plugin.getConfig().getString("Players." + onlinePlayers.getName() + ".Power").equalsIgnoreCase("Purple")) {
+                                                if (ActualComboCombination.equalsIgnoreCase(Purple.dodgeComboCombination)) {
+                                                    Purple.comboPlayerDodgeActivate(onlinePlayers);
+                                                }
+                                                if (ActualComboCombination.equalsIgnoreCase(Purple.teleportComboCombination)) {
+                                                    if (!Purple.teleportCooldown.isEmpty()) {
+                                                        if (Purple.teleportCooldown.containsKey(onlinePlayers)) {
+                                                            Utils.actionBar(onlinePlayers, "&cUmiejętność jeszcze nie gotowa, poczekaj &6" + Purple.teleportCooldown.get(onlinePlayers) + " sekund");
+                                                            return;
+                                                        }
+                                                    }
+                                                    Purple.comboPlayerTeleportActivate(onlinePlayers);
+                                                }
+                                        }
+                                        if (plugin.getConfig().getString("Players." + onlinePlayers.getName() + ".Power").equalsIgnoreCase("Blue")) {
+                                            if (ActualComboCombination.equalsIgnoreCase(Blue.negativeComboCombination)) {
+                                                if (!Blue.negativeCooldown.isEmpty()) {
+                                                    if (Blue.negativeCooldown.containsKey(onlinePlayers)) {
+                                                        Utils.actionBar(onlinePlayers, "&cUmiejętność jeszcze nie gotowa, poczekaj &6" + Blue.negativeCooldown.get(onlinePlayers) + " sekund");
+                                                        return;
+                                                    }
+                                                }
+                                                Blue.comboEffectActivate(onlinePlayers);
+                                            }
+                                            if (ActualComboCombination.equalsIgnoreCase(Blue.invisibleComboCombination)) {
+                                                if (!Blue.invisibleCooldown.isEmpty()) {
+                                                    if (Blue.invisibleCooldown.containsKey(onlinePlayers)) {
+                                                        Utils.actionBar(onlinePlayers, "&cUmiejętność jeszcze nie gotowa, poczekaj &6" + Blue.invisibleCooldown.get(onlinePlayers) + " sekund");
+                                                        return;
+                                                    }
+                                                }
+                                                Blue.comboInvisibleActivate(onlinePlayers);
+                                            }
+                                            if (ActualComboCombination.equalsIgnoreCase(Blue.swapComboCombination)) {
+                                                if (!Blue.swapCooldown.isEmpty()) {
+                                                    if (Blue.swapCooldown.containsKey(onlinePlayers)) {
+                                                        Utils.actionBar(onlinePlayers, "&cUmiejętność jeszcze nie gotowa, poczekaj &6" + Blue.swapCooldown.get(onlinePlayers) + " sekund");
+                                                        return;
+                                                    }
+                                                }
+                                                Blue.comboPlayerSwapActive(onlinePlayers);
+                                            }
+                                        }
+                                        if (plugin.getConfig().getString("Players." + onlinePlayers.getName() + ".Power").equalsIgnoreCase("Green")) {
+                                            if (ActualComboCombination.equalsIgnoreCase(Green.SuperStrengthComboCombination)) {
+                                                if (!Green.SuperStrengthCooldown.isEmpty()) {
+                                                    if (Green.SuperStrengthCooldown.containsKey(onlinePlayers)) {
+                                                        Utils.actionBar(onlinePlayers, "&cUmiejętność jeszcze nie gotowa, poczekaj &6" + Green.SuperStrengthCooldown.get(onlinePlayers) + " sekund");
+                                                        return;
+                                                    }
+                                                }
+                                                Green.SuperStrengthActive.put(onlinePlayers, Green.SuperStrengthActiveTime);
+                                            }
+                                        }
+                                        if (plugin.getConfig().getString("Players." + onlinePlayers.getName() + ".Power").equalsIgnoreCase("Yellow")) {
+                                            if (ActualComboCombination.equalsIgnoreCase(Yellow.lightningComboCombination)) {
+                                                createLighting(onlinePlayers.getEyeLocation(), 30, onlinePlayers);
+                                            }
+                                            if (ActualComboCombination.equalsIgnoreCase(Yellow.lightningsComboCombination)) {
+                                                Yellow.makeLightningHittingGround(onlinePlayers);
+                                            }
+                                        }
+                                        if (plugin.getConfig().getString("Players." + onlinePlayers.getName() + ".Power").equalsIgnoreCase("Robot")) {
+                                            if (ActualComboCombination.equalsIgnoreCase(Robot.healWaveComboCombination)) {
+                                                if (!Robot.healWaveCooldown.isEmpty()) {
+                                                    if (Robot.healWaveCooldown.containsKey(onlinePlayers)) {
+                                                        Utils.actionBar(onlinePlayers, "&cUmiejętność jeszcze nie gotowa, poczekaj &6" + Robot.healWaveCooldown.get(onlinePlayers) + " sekund");
+                                                        return;
+                                                    }
+                                                }
+                                                Robot.healWave(onlinePlayers);
                                             }
                                         }
                                     }
                                 }
-                                Fire.ActualComboCombination.remove(onlinePlayers);
-                                Fire.ActualComboTime.remove(onlinePlayers);
                             }
                         }
-                    }
-                }
-                if (!Green.PunchEntity.isEmpty()) {
-                    if (Green.PunchEntity != null) {
-                        for (Entity entity : Green.PunchEntity) {
-                            if (entity != null) {
-                                if (entity.isDead()) {
-                                    Green.PunchEntity.remove(entity);
-                                }
-                                entity.getLocation().getWorld().spawnParticle(Particle.CAMPFIRE_COSY_SMOKE, entity.getLocation().add(0, 1, 0), 5, 0.2, 0.2, 0.2, 0, null, true);
-                                if (entity.isOnGround() || entity.getVelocity().length() < 0.1) {
-                                    Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(plugin, () -> {
-                                        Green.PunchEntity.remove(entity);
-                                    }, 1);
+                        if (!Green.PunchEntity.isEmpty()) {
+                            if (Green.PunchEntity != null) {
+                                for (Entity entity : Green.PunchEntity) {
+                                    if (entity != null) {
+                                        if (entity.isDead()) {
+                                            Green.PunchEntity.remove(entity);
+                                        }
+                                        entity.getLocation().getWorld().spawnParticle(Particle.CAMPFIRE_COSY_SMOKE, entity.getLocation().add(0, 1, 0), 5, 0.2, 0.2, 0.2, 0, null, true);
+                                        if (entity.isOnGround() || entity.getVelocity().length() < 0.1) {
+                                            Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(plugin, () -> {
+                                                Green.PunchEntity.remove(entity);
+                                            }, 1);
 
+                                        }
+                                    }
                                 }
-                            }else{
-                                Green.PunchEntity.remove(entity);
                             }
                         }
-                    }
-                }
-                if (!Green.PowerPunchEntity.isEmpty()) {
-                    if (Green.PowerPunchEntity != null) {
-                        for (Entity entity : Green.PowerPunchEntity) {
-                            if (entity != null) {
-                                if (entity.isDead()) {
-                                    Green.PowerPunchEntity.remove(entity);
-                                }
-                                entity.getLocation().getWorld().spawnParticle(Particle.VILLAGER_HAPPY, entity.getLocation(), 5, 0.2, 0.3, 0.2, 1, null, true);
-                                if (entity.getVelocity().length() < 0.1) {
-                                    Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(plugin, () -> {
-                                        Green.PowerPunchEntity.remove(entity);
-                                    }, 1);
+                        if (!Green.PowerPunchEntity.isEmpty()) {
+                            if (Green.PowerPunchEntity != null) {
+                                for (Entity entity : Green.PowerPunchEntity) {
+                                    if (entity != null) {
+                                        if (entity.isDead()) {
+                                            Green.PowerPunchEntity.remove(entity);
+                                        }
+                                        entity.getLocation().getWorld().spawnParticle(Particle.VILLAGER_HAPPY, entity.getLocation(), 5, 0.2, 0.3, 0.2, 1, null, true);
+                                        if (entity.getVelocity().length() < 0.1) {
+                                            Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(plugin, () -> {
+                                                Green.PowerPunchEntity.remove(entity);
+                                            }, 1);
 
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -677,6 +563,7 @@ public class Timers {
                 }
             }
         },0, 1);
+
     }
     public static final Vector rotateVector(Vector v, float yawDegrees, float pitchDegrees) {
         double yaw = Math.toRadians(-1 * (yawDegrees + 90));
@@ -719,15 +606,15 @@ public class Timers {
                     if(entities instanceof Player) {
                         if (!player.equals(((Player) entities).getPlayer())){
                             loc.getWorld().spawnParticle(Particle.REDSTONE, entities.getLocation().add(0,1,0), 30,0.5,0.5,0.5, new Particle.DustOptions(Color.RED, 2));
-                            if(((LivingEntity) entities).getHealth()<=5){
+                            if(((LivingEntity) entities).getHealth()<=Yellow.lightningDamage){
                                 ((LivingEntity) entities).setHealth(0);
-                            }else ((LivingEntity) entities).setHealth(((LivingEntity) entities).getHealth() -5);
+                            }else ((LivingEntity) entities).setHealth(((LivingEntity) entities).getHealth() -Yellow.lightningDamage);
                            }
                     }else {
                         loc.getWorld().spawnParticle(Particle.REDSTONE, entities.getLocation().add(0, 1, 0), 30, 0.5, 0.5, 0.5, new Particle.DustOptions(Color.RED, 2));
-                        if(((LivingEntity) entities).getHealth()<=5){
+                        if(((LivingEntity) entities).getHealth()<=Yellow.lightningDamage){
                             ((LivingEntity) entities).setHealth(0);
-                        }else ((LivingEntity) entities).setHealth(((LivingEntity) entities).getHealth() -5);
+                        }else ((LivingEntity) entities).setHealth(((LivingEntity) entities).getHealth() -Yellow.lightningDamage);
                     }
                 }
             }
@@ -778,54 +665,7 @@ public class Timers {
                 }
                 if (plugin.getConfig().getString("Players." + onlinePlayers.getName() + ".Power").equalsIgnoreCase("Purple")) {
                     if (Purple.teleportCooldown.isEmpty()) {
-                        Player p = onlinePlayers;
-                        Location loc = p.getLocation();
-                        Vector dir = loc.getDirection();
-                        int dirLoc = 0;
-                        for (int i = 0; i < 30; i++) {
-                            loc = onlinePlayers.getLocation();
-                            loc.add(0, 0.5, 0);
-                            dir = loc.getDirection();
-                            dir.normalize();
-                            dir.multiply(i);
-                            loc.add(dir);
-                            if (loc.getBlock().isEmpty()) {
-                                dirLoc = i;
-                            }
-                        }
-                        loc = onlinePlayers.getLocation();
-                        dir = loc.getDirection();
-                        loc.add(0, 0.5, 0);
-                        dir.normalize();
-                        dir.multiply(dirLoc);
-                        loc.add(dir);
-                        p.spawnParticle(Particle.REDSTONE, loc.add(0, 1, 0), 25, 0.2, 0.7, 0.2, new Particle.DustOptions(Color.PURPLE, 1));
-
-                    }else{
-                        if (!Purple.teleportCooldown.containsKey(onlinePlayers)) {
-                            Player p = onlinePlayers;
-                            Location loc = p.getLocation();
-                            Vector dir = loc.getDirection();
-                            int dirLoc = 0;
-                            for (int i = 0; i < 30; i++) {
-                                loc = onlinePlayers.getLocation();
-                                loc.add(0, 0.5, 0);
-                                dir = loc.getDirection();
-                                dir.normalize();
-                                dir.multiply(i);
-                                loc.add(dir);
-                                if (loc.getBlock().isEmpty()) {
-                                    dirLoc = i;
-                                }
-                            }
-                            loc = onlinePlayers.getLocation();
-                            dir = loc.getDirection();
-                            loc.add(0, 0.5, 0);
-                            dir.normalize();
-                            dir.multiply(dirLoc);
-                            loc.add(dir);
-                            p.spawnParticle(Particle.REDSTONE, loc.add(0, 1, 0), 25, 0.2, 0.7, 0.2, new Particle.DustOptions(Color.PURPLE, 1));
-                        }
+                        Purple.spawnTeleportParticle(onlinePlayers);
                     }
                 }
             }

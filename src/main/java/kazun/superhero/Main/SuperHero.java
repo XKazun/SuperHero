@@ -15,6 +15,7 @@ public final class SuperHero extends JavaPlugin {
         new Purple(this);
         new Green(this);
         new Blue(this);
+        new Yellow(this);
         Timers.OneSceonds();
         Timers.OneTick();
         Timers.TenTick();
